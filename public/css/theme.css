@@ -1,0 +1,49 @@
+body{
+    overflow-x: hidden;
+}
+body::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width : 5px;  /*高宽分别对应横竖滚动条的尺寸*/
+    height: 1px;
+    }
+body::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 10px;
+    }
+body::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    border-radius: 10px;
+}
+
+#app-container{
+    top:40%;
+    margin:auto;
+    position:absolute;
+    left:0;
+    right:0;
+}
+/* 主页面控制按钮 */
+#theme-btn{
+    height:30px;
+    display:block;
+    position:absolute;
+    right:5px;top:5px;
+    z-index:99999;
+    transition: all 0.05s linear;
+  }
+  #theme-btn:hover{
+    cursor: pointer;
+    user-select: none;
+    font-weight:bold;
+    transform: scale(1.05);
+    transition: all 0.1s linear;
+  }
+
+/* 控制面板 */
+#theme-box{
+    border-radius:20px;
+    display:none;
+    z-index:99999;
+    position:absolute;
+    opacity: 0;
+}
