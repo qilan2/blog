@@ -1,0 +1,571 @@
+
+  <!DOCTYPE html>
+  <html lang="zh-cn"  >
+  <head>
+  <meta charset="utf-8">
+  
+
+  
+
+  
+
+  
+  <title>
+    秒杀学习笔记 |
+    
+    柒蓝笔记
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="preload" href="https://fonts.googleapis.com/css?family=Mulish:400,400italic,700,700italic%7CNoto%20Serif%20SC:400,400italic,700,700italic%7CUbuntu%20Mono:400,400italic,700,700italic&display=swap&subset=latin,latin-ext" as="style" onload="this.onload&#x3D;null;this.rel&#x3D;&#39;stylesheet&#39;">
+  
+<link rel="stylesheet" href="https://npm.webcache.cn/@fortawesome/fontawesome-free@6.5.1/css/regular.min.css">
+<link rel="stylesheet" href="https://npm.webcache.cn/@fortawesome/fontawesome-free@6.5.1/css/solid.min.css">
+
+  <link rel="preload" href="https://npm.webcache.cn/@fortawesome/fontawesome-free@6.5.1/css/brands.min.css" as="style" onload="this.onload&#x3D;null;this.rel&#x3D;&#39;stylesheet&#39;"><link rel="preload" href="https://npm.webcache.cn/@fortawesome/fontawesome-free@6.5.1/css/v5-font-face.min.css" as="style" onload="this.onload&#x3D;null;this.rel&#x3D;&#39;stylesheet&#39;"><link rel="preload" href="https://npm.webcache.cn/@fortawesome/fontawesome-free@6.5.1/css/v4-font-face.min.css" as="style" onload="this.onload&#x3D;null;this.rel&#x3D;&#39;stylesheet&#39;">
+  
+<link rel="stylesheet" href="/css/loader.css">
+
+  <meta name="description" content="单机秒杀 情况一最简单的查询更新操作，不涉及各种锁，会出现超卖情况。 流程首先清空订单表 新建线程池 运行200个线程模拟并发请求， 每个线程的步骤：  查询商品剩余数量 如果大于0，商品数量减1， 创建订单，新建订单记录。  秒杀成功添加记录到订单表，商品数量减1, 会出现超卖现象 情况二事务中加锁 锁释放和事务提交的顺序问题面对高并发是锁的实现要使用aop 实现，锁不能加在方法中，因为事务一般">
+<meta property="og:type" content="article">
+<meta property="og:title" content="秒杀学习笔记">
+<meta property="og:url" content="http://example.com/2024/04/03/%E7%A7%92%E6%9D%80%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="柒蓝笔记">
+<meta property="og:description" content="单机秒杀 情况一最简单的查询更新操作，不涉及各种锁，会出现超卖情况。 流程首先清空订单表 新建线程池 运行200个线程模拟并发请求， 每个线程的步骤：  查询商品剩余数量 如果大于0，商品数量减1， 创建订单，新建订单记录。  秒杀成功添加记录到订单表，商品数量减1, 会出现超卖现象 情况二事务中加锁 锁释放和事务提交的顺序问题面对高并发是锁的实现要使用aop 实现，锁不能加在方法中，因为事务一般">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-03T07:25:15.859Z">
+<meta property="article:modified_time" content="2024-04-03T07:51:51.136Z">
+<meta property="article:author" content="柒蓝">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="柒蓝笔记" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+
+  
+  
+  
+  
+  
+<script src="https://npm.webcache.cn/pace-js@1.2.4/pace.min.js"></script>
+
+  
+    
+<link rel="stylesheet" href="https://npm.webcache.cn/wowjs@1.1.3/css/libs/animate.css">
+
+    
+<script src="https://npm.webcache.cn/wowjs@1.1.3/dist/wow.min.js"></script>
+
+    <script>
+      new WOW({
+        offset: 0,
+        mobile: true,
+        live: false
+      }).init();
+    </script>
+  
+  
+    <script src="/sw.js"></script>
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+  <body>
+    
+  <div id='loader'>
+    <div class="loading-left-bg"></div>
+    <div class="loading-right-bg"></div>
+    <div class="spinner-box">
+      <div class="loading-taichi">
+        <svg width="150" height="150" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M303.5 432A80 80 0 0 1 291.5 592A80 80 0 0 1 303.5 432z" fill="#ff6e6b" />
+          <path d="M512 65A447 447 0 0 1 512 959L512 929A417 417 0 0 0 512 95A417 417 0 0 0 512 929L512 959A447 447 0 0 1 512 65z" fill="#fd0d00" />
+          <path d="M512 95A417 417 0 0 1 929 512A208.5 208.5 0 0 1 720.5 720.5L720.5 592A80 80 0 0 0 720.5 432A80 80 0 0 0 720.5 592L720.5 720.5A208.5 208.5 0 0 1 512 512A208.5 208.5 0 0 0 303.5 303.5A208.5 208.5 0 0 0 95 512A417 417 0 0 1 512 95" fill="#fd0d00" />
+        </svg>
+      </div>
+      <div class="loading-word">少女祈祷中...</div>
+    </div>
+  </div>
+  </div>
+  <script>
+    var time = null;
+    const startLoading = () => {
+      time = Date.now();
+      document.getElementById('loader').classList.remove("loading");
+    }
+    const endLoading = () => {
+      if (!time) {
+        document.body.style.overflow = 'auto';
+        document.getElementById('loader').classList.add("loading");
+      } else {
+        if (Date.now() - time > 500) {
+          time = null;
+          document.body.style.overflow = 'auto';
+          document.getElementById('loader').classList.add("loading");
+        } else {
+          setTimeout(endLoading, 500 - (Date.now() - time));
+          time = null;
+        }
+      }
+    }
+    window.addEventListener('load', endLoading);
+    document.getElementById('loader').addEventListener('click', endLoading);
+  </script>
+
+
+    <div id="container">
+      <div id="wrap">
+        <div id="header-nav">
+  <nav id="main-nav">
+    
+      <span class="main-nav-link-wrap">
+        <span class="main-nav-icon"></span>
+        <a class="main-nav-link" href="/">Home</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <span class="main-nav-icon"></span>
+        <a class="main-nav-link" href="/archives">Archives</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <span class="main-nav-icon"></span>
+        <a class="main-nav-link" href="/about">About</a>
+      </span>
+    
+      <span class="main-nav-link-wrap">
+        <span class="main-nav-icon"></span>
+        <a class="main-nav-link" href="/friend">Friend</a>
+      </span>
+    
+    <a id="main-nav-toggle" class="nav-icon"></a>
+  </nav>
+  <nav id="sub-nav">
+    
+      <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+    
+    
+    
+  </nav>
+</div>
+<header id="header">
+  
+    <img fetchpriority="high" src="/images/banner.jpg" alt="秒杀学习笔记">
+  
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <div id="logo-wrap">
+        
+          
+          
+            <a href="/" id="logo">
+              <h1>秒杀学习笔记</h1>
+            </a>
+          
+        
+      </div>
+      
+        
+        <h2 id="subtitle-wrap">
+          
+        </h2>
+      
+    </div>
+  </div>
+</header>
+
+        <div id="content" class="outer">
+          
+          <section id="main"><article id="post-秒杀学习笔记" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-inner">
+    <div class="article-meta">
+      <div class="article-date wow slideInLeft">
+  <a href="/2024/04/03/%E7%A7%92%E6%9D%80%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="article-date-link">
+    <time datetime="2024-04-03T07:25:15.859Z" itemprop="datePublished">2024-04-03</time>
+  </a>
+</div>
+
+      
+
+    </div>
+    <div class="hr-line"></div>
+    
+
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="单机秒杀"><a href="#单机秒杀" class="headerlink" title="单机秒杀"></a>单机秒杀</h1><hr>
+<h2 id="情况一"><a href="#情况一" class="headerlink" title="情况一"></a>情况一</h2><p>最简单的查询更新操作，不涉及各种锁，会出现超卖情况。</p>
+<h2 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h2><p>首先清空订单表</p>
+<p>新建线程池</p>
+<p>运行200个线程模拟并发请求，</p>
+<p>每个线程的步骤：</p>
+<ul>
+<li>查询商品剩余数量</li>
+<li>如果大于0，商品数量减1，</li>
+<li>创建订单，新建订单记录。</li>
+</ul>
+<p>秒杀成功添加记录到订单表，商品数量减1,</p>
+<p>会出现超卖现象</p>
+<h2 id="情况二"><a href="#情况二" class="headerlink" title="情况二"></a>情况二</h2><p>事务中加锁</p>
+<h3 id="锁释放和事务提交的顺序问题"><a href="#锁释放和事务提交的顺序问题" class="headerlink" title="锁释放和事务提交的顺序问题"></a>锁释放和事务提交的顺序问题</h3><p>面对高并发是锁的实现要使用aop 实现，锁不能加在方法中，因为事务一般是方法结束后提交，而锁在finally 方法中提交，从而会出现锁已经解锁而事务还没来得及提交，下个锁获得到的数据就不对。</p>
+<p>会出现事务没有提交之前，锁已经释放，导致出现超卖1现象。</p>
+<h2 id="情况三"><a href="#情况三" class="headerlink" title="情况三"></a>情况三</h2><p>使用自定义切面AOP，实现锁上移，事务提交后释放锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">	<span class="meta">@Servicelock</span></span><br><span class="line">	<span class="meta">@Transactional(rollbackFor = Exception.class)</span></span><br><span class="line">	<span class="keyword">public</span> Result <span class="title function_">startSeckilAopLock</span><span class="params">(<span class="type">long</span> seckillId, <span class="type">long</span> userId)</span> &#123;</span><br><span class="line">		<span class="comment">//来自码云码友&lt;马丁的早晨&gt;的建议 使用AOP + 锁实现</span></span><br><span class="line">		<span class="type">String</span> <span class="variable">nativeSql</span> <span class="operator">=</span> <span class="string">&quot;SELECT number FROM seckill WHERE seckill_id=?&quot;</span>;</span><br><span class="line">		<span class="type">Object</span> <span class="variable">object</span> <span class="operator">=</span>  dynamicQuery.nativeQueryObject(nativeSql, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;seckillId&#125;);</span><br><span class="line">		<span class="type">Long</span> <span class="variable">number</span> <span class="operator">=</span>  ((Number) object).longValue();</span><br><span class="line">		<span class="keyword">if</span>(number&gt;<span class="number">0</span>)&#123;</span><br><span class="line">			nativeSql = <span class="string">&quot;UPDATE seckill  SET number=number-1 WHERE seckill_id=?&quot;</span>;</span><br><span class="line">			dynamicQuery.nativeExecuteUpdate(nativeSql, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;seckillId&#125;);</span><br><span class="line">			<span class="type">SuccessKilled</span> <span class="variable">killed</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SuccessKilled</span>();</span><br><span class="line">			killed.setSeckillId(seckillId);</span><br><span class="line">			killed.setUserId(userId);</span><br><span class="line">			killed.setState(Short.parseShort(number+<span class="string">&quot;&quot;</span>));</span><br><span class="line">			killed.setCreateTime(<span class="keyword">new</span> <span class="title class_">Timestamp</span>(System.currentTimeMillis()));</span><br><span class="line">			dynamicQuery.save(killed);</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			<span class="keyword">return</span> Result.error(SeckillStatEnum.END);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> Result.ok(SeckillStatEnum.SUCCESS);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="情况四"><a href="#情况四" class="headerlink" title="情况四"></a>情况四</h2><p>使用了select…for update的方式，这样就通过数据库实现了悲观锁，会对查询的数据记录加锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//查询加锁</span></span><br><span class="line"><span class="type">String</span> <span class="variable">nativeSql</span> <span class="operator">=</span> <span class="string">&quot;SELECT number FROM seckill WHERE seckill_id=? FOR UPDATE&quot;</span>;</span><br><span class="line">		<span class="type">Object</span> <span class="variable">object</span> <span class="operator">=</span>  dynamicQuery.nativeQueryObject(nativeSql, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;seckillId&#125;);</span><br><span class="line"><span class="type">Long</span> <span class="variable">number</span> <span class="operator">=</span>  ((Number) object).longValue();</span><br><span class="line"></span><br><span class="line"><span class="comment">//数量大于0，更新数据</span></span><br><span class="line"><span class="keyword">if</span>(number&gt;<span class="number">0</span>)&#123;nativeSql = <span class="string">&quot;UPDATE seckill  SET number=number-1 WHERE seckill_id=?&quot;</span>;</span><br><span class="line">			dynamicQuery.nativeExecuteUpdate(nativeSql, <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;seckillId&#125;);</span><br><span class="line">			<span class="type">SuccessKilled</span> <span class="variable">killed</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SuccessKilled</span>();</span><br><span class="line">			killed.setSeckillId(seckillId);</span><br><span class="line">			killed.setUserId(userId);</span><br><span class="line">			killed.setState((<span class="type">short</span>)<span class="number">0</span>);</span><br><span class="line">			killed.setCreateTime(<span class="keyword">new</span> <span class="title class_">Timestamp</span>(System.currentTimeMillis()));</span><br><span class="line">			dynamicQuery.save(killed);</span><br><span class="line">			<span class="keyword">return</span> Result.ok(SeckillStatEnum.SUCCESS);</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="情况五"><a href="#情况五" class="headerlink" title="情况五"></a>情况五</h2><p>基于数据库悲观锁实现，更新加锁并判断剩余数量。</p>
+<h2 id="情况六"><a href="#情况六" class="headerlink" title="情况六"></a>情况六</h2><p>基于数据库乐观锁实现，先查询商品版本号，然后根据版本号更新，判断更新数量。少量用户抢购的时候会出现 <strong>少买</strong> 的情况。</p>
+<h2 id="情况七"><a href="#情况七" class="headerlink" title="情况七"></a>情况七</h2><p>进程内队列 LinkedBlockingQueue 实现，同步消费</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="comment">//新建线程对于阻塞队列进行循环读取</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TaskRunner</span> <span class="keyword">implements</span> <span class="title class_">ApplicationRunner</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">Logger</span> <span class="variable">LOGGER</span> <span class="operator">=</span> LoggerFactory.getLogger(TaskRunner.class);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> ISeckillService seckillService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">(ApplicationArguments <span class="keyword">var</span>)</span>&#123;</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">Thread</span>(() -&gt; &#123;</span><br><span class="line">            LOGGER.info(<span class="string">&quot;提醒队列启动成功&quot;</span>);</span><br><span class="line">            <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">//进程内队列</span></span><br><span class="line">                    <span class="type">SuccessKilled</span> <span class="variable">kill</span> <span class="operator">=</span> SeckillQueue.getSkillQueue().consume();</span><br><span class="line">                    <span class="keyword">if</span>(kill!=<span class="literal">null</span>)&#123;</span><br><span class="line">                        <span class="type">Result</span> <span class="variable">result</span> <span class="operator">=</span></span><br><span class="line">                                seckillService.startSeckilAopLock(kill.getSeckillId(), kill.getUserId());</span><br><span class="line">                        <span class="keyword">if</span>(result.equals(Result.ok(SeckillStatEnum.SUCCESS)))&#123;</span><br><span class="line">                            LOGGER.info(<span class="string">&quot;用户:&#123;&#125;&#123;&#125;&quot;</span>,kill.getUserId(),<span class="string">&quot;秒杀成功&quot;</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="情况八"><a href="#情况八" class="headerlink" title="情况八"></a>情况八</h2><p>基于高性能队列 Disruptor实现，同步消费，</p>
+<h1 id="分布式秒杀"><a href="#分布式秒杀" class="headerlink" title="分布式秒杀"></a>分布式秒杀</h1><h2 id="1-Redis-分布式锁"><a href="#1-Redis-分布式锁" class="headerlink" title="1 Redis 分布式锁"></a>1 Redis 分布式锁</h2><p> 使用redis进行加锁，跟单机加锁一样，会由于锁和事物执行顺序问题，会出现超卖的情况(建议锁上移)。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2024/04/03/%E7%A7%92%E6%9D%80%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" data-id="clujho91j00008cub1i4j0mwq" data-title="秒杀学习笔记" class="article-share-link">Share</a>
+      
+      
+      
+      
+      
+      
+
+    </footer>
+  </div>
+  
+    
+  <nav id="article-nav" class="wow fadeInUp">
+    
+      <div class="article-nav-link-wrap article-nav-link-left">
+        
+          <img data-src="https://trustcdn.baidu.com/officialcard/f643171a2402c49eec852947ac71a407_originalsize.png" data-sizes="auto" alt="字节一面总结" class="lazyload">
+        
+        <a href="/2024/04/03/%E5%AD%97%E8%8A%82%E4%B8%80%E9%9D%A2%E6%80%BB%E7%BB%93/"></a>
+        <div class="article-nav-caption">Newer</div>
+        <h3 class="article-nav-title">
+          
+            字节一面总结
+          
+        </h3>
+      </div>
+    
+    
+    <div class="article-nav-link-wrap article-nav-link-right">
+      
+        
+        
+          <img data-src="/images/banner.jpg" data-sizes="auto" alt="Hello World" class="lazyload">
+        
+      
+      <a href="/2024/04/01/hello-world/"></a>
+      <div class="article-nav-caption">Older</div>
+      <h3 class="article-nav-title">
+        
+          Hello World
+        
+      </h3>
+    </div>
+    
+  </nav>
+
+
+  
+</article>
+
+
+
+
+
+
+</section>
+          
+            <aside id="sidebar">
+  <div class="sidebar-wrap wow fadeInRight wrap-sticky">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%95%E6%9C%BA%E7%A7%92%E6%9D%80"><span class="toc-number">1.</span> <span class="toc-text">单机秒杀</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%B8%80"><span class="toc-number">1.1.</span> <span class="toc-text">情况一</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%81%E7%A8%8B"><span class="toc-number">1.2.</span> <span class="toc-text">流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%BA%8C"><span class="toc-number">1.3.</span> <span class="toc-text">情况二</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%94%81%E9%87%8A%E6%94%BE%E5%92%8C%E4%BA%8B%E5%8A%A1%E6%8F%90%E4%BA%A4%E7%9A%84%E9%A1%BA%E5%BA%8F%E9%97%AE%E9%A2%98"><span class="toc-number">1.3.1.</span> <span class="toc-text">锁释放和事务提交的顺序问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%B8%89"><span class="toc-number">1.4.</span> <span class="toc-text">情况三</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E5%9B%9B"><span class="toc-number">1.5.</span> <span class="toc-text">情况四</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%BA%94"><span class="toc-number">1.6.</span> <span class="toc-text">情况五</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E5%85%AD"><span class="toc-number">1.7.</span> <span class="toc-text">情况六</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%B8%83"><span class="toc-number">1.8.</span> <span class="toc-text">情况七</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E5%85%AB"><span class="toc-number">1.9.</span> <span class="toc-text">情况八</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E7%A7%92%E6%9D%80"><span class="toc-number">2.</span> <span class="toc-text">分布式秒杀</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81"><span class="toc-number">2.1.</span> <span class="toc-text">1 Redis 分布式锁</span></a></li></ol></li></ol></div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.jpg" data-sizes="auto" alt="柒蓝" class="lazyload">
+  <div class="sidebar-author-name">柒蓝</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">0</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">0</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="Friend"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">Friend</div>
+    </div>
+  
+</div>
+</div>
+    
+    
+      <div class="sidebar-btn-wrapper" style="position:static">
+        <div class="sidebar-toc-btn current"></div>
+        <div class="sidebar-common-btn"></div>
+      </div>
+    
+  </div>
+
+  
+</aside>
+
+          
+        </div>
+        <footer id="footer" class="wow fadeInUp">
+  <div style="width: 100%; overflow: hidden">
+    <div class="footer-line"></div>
+  </div>
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      <div>
+        <span class="icon-copyright"></span>
+        2020-2024
+        <span class="footer-info-sep"></span>
+        柒蓝
+      </div>
+      
+        <div>
+          Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>&nbsp;
+          Theme.<a href="https://github.com/D-Sketon/hexo-theme-reimu" target="_blank">Reimu</a>
+        </div>
+      
+      
+        <div>
+          <span class="icon-brush"></span>
+          7.9k
+          &nbsp;|&nbsp;
+          <span class="icon-coffee"></span>
+          00:30
+        </div>
+      
+      
+        <div>
+          <span class="icon-eye"></span>
+          <span id="busuanzi_container_site_pv">Number of visits&nbsp;<span id="busuanzi_value_site_pv"></span></span>
+          &nbsp;|&nbsp;
+          <span class="icon-user"></span>
+          <span id="busuanzi_container_site_uv">Number of visitors&nbsp;<span id="busuanzi_value_site_uv"></span></span>
+        </div>
+      
+    </div>
+  </div>
+</footer>
+
+        <div class="sidebar-top">
+          <img src="/images/taichi.png" height="50" width="50" />
+          <div class="arrow-up"></div>
+        </div>
+        <div id="mask"></div>
+      </div>
+      <nav id="mobile-nav">
+  <div class="sidebar-wrap">
+    
+      <div class="sidebar-toc-sidebar"><div class="sidebar-toc">
+  <h3 class="toc-title">Contents</h3>
+  <div class="sidebar-toc-wrapper"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%95%E6%9C%BA%E7%A7%92%E6%9D%80"><span class="toc-number">1.</span> <span class="toc-text">单机秒杀</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%B8%80"><span class="toc-number">1.1.</span> <span class="toc-text">情况一</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%81%E7%A8%8B"><span class="toc-number">1.2.</span> <span class="toc-text">流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%BA%8C"><span class="toc-number">1.3.</span> <span class="toc-text">情况二</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%94%81%E9%87%8A%E6%94%BE%E5%92%8C%E4%BA%8B%E5%8A%A1%E6%8F%90%E4%BA%A4%E7%9A%84%E9%A1%BA%E5%BA%8F%E9%97%AE%E9%A2%98"><span class="toc-number">1.3.1.</span> <span class="toc-text">锁释放和事务提交的顺序问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%B8%89"><span class="toc-number">1.4.</span> <span class="toc-text">情况三</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E5%9B%9B"><span class="toc-number">1.5.</span> <span class="toc-text">情况四</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%BA%94"><span class="toc-number">1.6.</span> <span class="toc-text">情况五</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E5%85%AD"><span class="toc-number">1.7.</span> <span class="toc-text">情况六</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E4%B8%83"><span class="toc-number">1.8.</span> <span class="toc-text">情况七</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%83%85%E5%86%B5%E5%85%AB"><span class="toc-number">1.9.</span> <span class="toc-text">情况八</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E7%A7%92%E6%9D%80"><span class="toc-number">2.</span> <span class="toc-text">分布式秒杀</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Redis-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81"><span class="toc-number">2.1.</span> <span class="toc-text">1 Redis 分布式锁</span></a></li></ol></li></ol></div>
+</div>
+</div>
+      <div class="sidebar-common-sidebar hidden"><div class="sidebar-author">
+  <img data-src="/avatar/avatar.jpg" data-sizes="auto" alt="柒蓝" class="lazyload">
+  <div class="sidebar-author-name">柒蓝</div>
+  <div class="sidebar-description"></div>
+</div>
+<div class="sidebar-state">
+  <div class="sidebar-state-article">
+    <div>Posts</div>
+    <div class="sidebar-state-number">7</div>
+  </div>
+  <div class="sidebar-state-category">
+    <div>Categories</div>
+    <div class="sidebar-state-number">0</div>
+  </div>
+  <div class="sidebar-state-tag">
+    <div>Tags</div>
+    <div class="sidebar-state-number">0</div>
+  </div>
+</div>
+<div class="sidebar-social">
+  
+</div>
+<div class="sidebar-menu">
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/" aria-label="Home"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">Home</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/archives" aria-label="Archives"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">Archives</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/about" aria-label="About"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">About</div>
+    </div>
+  
+    <div class="sidebar-menu-link-wrap">
+      <a class="sidebar-menu-link-dummy" href="/friend" aria-label="Friend"></a>
+      <span class="sidebar-menu-icon"></span>
+      <div class="sidebar-menu-link">Friend</div>
+    </div>
+  
+</div>
+</div>
+    
+  </div>
+  
+    <div class="sidebar-btn-wrapper">
+      <div class="sidebar-toc-btn current"></div>
+      <div class="sidebar-common-btn"></div>
+    </div>
+  
+</nav>
+
+    </div>
+    <div class="site-search">
+      <div class="reimu-popup popup">
+        <div class="reimu-search">
+          <span class="reimu-search-input-icon"></span>
+          <div class="reimu-search-input" id="reimu-search-input"></div>
+        </div>
+        <div class="reimu-results">
+          <div id="reimu-stats"></div>
+          <div id="reimu-hits"></div>
+          <div id="reimu-pagination" class="reimu-pagination"></div>
+        </div>
+        <span class="popup-btn-close"></span>
+      </div>
+    </div>
+    
+<script src="https://npm.webcache.cn/jquery@3.7.1/dist/jquery.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/lazysizes@5.3.2/lazysizes.min.js"></script>
+
+
+<script src="https://npm.webcache.cn/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+
+
+  
+<script src="https://npm.webcache.cn/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" defer></script>
+
+
+
+  
+<script src="https://npm.webcache.cn/busuanzi@2.3.0/bsz.pure.mini.js" async></script>
+
+
+
+
+
+
+<script src="/js/pjax_script.js" data-pjax></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+<script src="https://npm.webcache.cn/mouse-firework@0.0.4/dist/index.umd.js"></script>
+
+  <script>
+    firework(JSON.parse('{"excludeElements":["a"],"particles":[{"shape":"circle","move":["emit"],"easing":"easeOutExpo","colors":["#ff5252","#ff7c7c","#ffafaf","#ffd0d0"],"number":20,"duration":[1200,1800],"shapeOptions":{"radius":[16,32],"alpha":[0.3,0.5]}},{"shape":"circle","move":["diffuse"],"easing":"easeOutExpo","colors":["#ff0000"],"number":1,"duration":[1200,1800],"shapeOptions":{"radius":20,"alpha":[0.2,0.5],"lineWidth":6}}]}'))
+  </script>
+
+
+
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+  <script>
+    console.log(String.raw`%c 
+ ______     ______     __     __    __     __  __    
+/\  == \   /\  ___\   /\ \   /\ "-./  \   /\ \/\ \   
+\ \  __<   \ \  __\   \ \ \  \ \ \-./\ \  \ \ \_\ \  
+ \ \_\ \_\  \ \_____\  \ \_\  \ \_\ \ \_\  \ \_____\ 
+  \/_/ /_/   \/_____/   \/_/   \/_/  \/_/   \/_____/ 
+                                                  
+`,'color: #ff5252;')
+    console.log('%c Theme.Reimu v' + '0.1.0' + ' %c https://github.com/D-Sketon/hexo-theme-reimu ', 'color: white; background: #ff5252; padding:5px 0;', 'padding:4px;border:1px solid #ff5252;')
+  </script>
+  
+
+  <!-- hexo injector body_end start -->
+<script src="/js/insert_highlight.js" data-pjax></script>
+<!-- hexo injector body_end end --></body>
+  </html>
+
