@@ -131,125 +131,110 @@ body {
   </div>
 
   <script>
+ // 获取url中的参数值
+        function getParameterByName(name, url) {
+            if (!url) {
+                url = window.location.href;
+            }
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) {
+                return null;
+            }
+            if (!results[2]) {
+                return '';
+            }
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+        function extractNumberFromUrl(url) {
+// 使用正则表达式匹配 URL 中的数字部分
+var match = url.match(/(\d+)_p\d+\.(jpg|png)$/);
 
-// 获取url中的参数值
-    function getParameterByName(name, url) {
-      if (!url) {
-        url = window.location.href;
-      }
-      name = name.replace(/[\[\]]/g, '\\$&');
-      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(url);
-      if (!results) {
-        return null;
-      }
-      if (!results[2]) {
+    if (match) {
+        // 如果匹配成功，返回匹配到的数字部分
+        return match[1];
+    } else {
+        // 如果没有匹配到，则返回空字符串或者其他默认值，根据需求自行调整
         return '';
-      }
-      return decodeURIComponent(results[2].replace(/\+/g, ' '));
     }
-
-    // 获取id参数值
-    var id = getParameterByName('id');
-    // 使用QL对参数进行分割
-    var items = id.split('QL');
-
-    // 动态生成img标签并将其添加到容器中
-// 动态生成img标签并将其添加到容器中
-var container = document.getElementById('imagesContainer');
-var itemsCount = items.length;
-var batchSize = 1;
-
-// 创建一个函数，用于批量添加图片到容器中
-function addBatchImages(startIndex) {
-  var endIndex = Math.min(startIndex + batchSize, itemsCount);
-  var row = document.createElement("div");
-  row.className = "image-row";
-
-  for (var i = startIndex; i < endIndex; i++) {
-    var imgContainer = document.createElement("div");
-    imgContainer.className = "img-container";
-    
-    imgContainer.style.display = 'inline-block'; /* 使用 inline-block 布局 */
-
-    var loadingImg = document.createElement("div");
-    loadingImg.className = "loading-image";
-
-    var loadedImg = document.createElement("img");
-    loadedImg.className = "pic";
-    loadedImg.src = "http://poglu3.mcfuns.cn/sd/" + items[i]; //https://pixiv.yuki.sh/   https://pximg.lolicon.run/   https://sex.nyan.xyz/   https://sex.nyan.xyz/  https://i.pixiv.re/
-    loadedImg.onerror = function() { // 当图片加载失败时触发
-      this.style.display = 'none'; // 隐藏加载失败的图片
-      var defaultSrc = "https://img.qlvv.cn/file/ad3880f3b47a0c6d4d862.png"; // 默认图片的链接
-      this.src = defaultSrc; // 替换图片的src属性为默认图片的链接
-      var index = this.getAttribute("data-index");
-      var id = this.getAttribute("data-id");
-      var textElement = this.nextElementSibling; // 下一个兄弟元素，即存放文字的元素
-    if (id == null) {
-        imageText.src = "https://img.shields.io/badge/ON-155663221-plastic.svg?style=social&logo=waze&&logoColor=FFBE00";
-    } else {
-        imageText.src = "https://img.shields.io/badge/OK-155663221-plastic.svg?style=social&logo=waze&&logoColor=58B7FE";
-    }
-      this.style.display = 'block'; // 显示替换后的默认图片
-    };
-
-    imgContainer.appendChild(loadingImg);
-    imgContainer.appendChild(loadedImg);
-
-    var imageText = document.createElement("img");
-//imageText.className = "image-text";
-var url = items[i];
-    var filename = url.substring(url.lastIndexOf('/') + 1);
-    var idMatch = filename.match(/(\d+)_p\d+\.(jpg|png)$/);
-    var id = idMatch ? idMatch[1] : null;
-    if (id == null) {
-        imageText.src = "https://img.shields.io/badge/ON-155663221-plastic.svg?style=social&logo=waze&&logoColor=FFBE00";
-    } else {
-        imageText.src = "https://img.shields.io/badge/OK-155663221-plastic.svg?style=social&logo=waze&&logoColor=58B7FE";
-    }
-var textElement = imageText.nextElementSibling; // Next sibling element, i.e., the element containing the text
-
-// Assuming imgContainer is already defined
-imgContainer.appendChild(imageText);
-
-    row.appendChild(imgContainer);
-  }
-
-  container.appendChild(row);
-
-  // 如果还有图片未添加，延迟一段时间后再继续添加下一批图片
-  if (endIndex < itemsCount) {
-    setTimeout(function() {
-      addBatchImages(endIndex);
-    }, 400); // 这里设置延迟的时间，单位为毫秒
-  }
 }
+        var type = getParameterByName('type');
+        console.log(type); // 应该输出查询字符串中的'type'参数值
+        // 获取id参数值
+        var id = getParameterByName('id');
+        var time = getParameterByName('time');
+        // 使用QL对参数进行分割
+        var items = id.split('QL');
+        // 动态生成img标签并将其添加到容器中
+        var container = document.getElementById('imagesContainer');
+        var itemsCount = items.length;
+        var batchSize = 1;
 
-// 调用函数开始添加图片
-addBatchImages(0);
+        var timestamp = parseInt(time, 10);
+var currentTime = Date.now();
+if (currentTime - timestamp > 300000) {
+    window.location.href = '404.html'; // 跳转到首页
+} 
 
+        // 创建一个函数，用于批量添加图片到容器中
+        function addBatchImages(startIndex) {
+            var endIndex = Math.min(startIndex + batchSize, itemsCount);
+            var row = document.createElement("div");
+            row.className = "image-row";
 
+            for (var i = startIndex; i < endIndex; i++) {
+                var imgContainer = document.createElement("div");
+                imgContainer.className = "img-container";
+                imgContainer.style.display = 'inline-block';
 
+                var loadingImg = document.createElement("div");
+                loadingImg.className = "loading-image";
 
-// 更改图片点击事件绑定方式，使用事件委托
-$("#imagesContainer").on("click", "img.pic", function() {
-  var modal = document.getElementById('myModal');
-  var modalImg = document.getElementById("img01");
-  modal.style.display = "block";
-  modalImg.src = this.src;
-});
+                var loadedImg = document.createElement("img");
+                loadedImg.className = "pic";
+                if(type == "hh"){
+                    loadedImg.src = "http://poglu3.mcfuns.cn/sd/" + items[i]+".png";
+                }else{
+                    loadedImg.src = "https://pximg.lolicon.run/" +items[i];
+                }
+                imgContainer.appendChild(loadingImg);
+                imgContainer.appendChild(loadedImg);
 
-// 点击关闭按钮或模态框以外的区域时关闭模态框
-$(".close, .modal").click(function(event) {
-  if (event.target === this) {
-    var modal = document.getElementById('myModal');
-    modal.style.display = "none";
-  }
-});
+                row.appendChild(imgContainer);
 
+                // 为每个图片创建Viewer对象
+                new Viewer(loadedImg, {
+                    inline: false,
+                    viewed() {
+                        viewer.zoomTo(1);
+                    },
+                    url: function (image) {
+                        return image.src;
+                    },
+                });
+            }
 
+            container.appendChild(row);
 
-    
+            // 如果还有图片未添加，延迟一段时间后再继续添加下一批图片
+            if (endIndex < itemsCount) {
+                setTimeout(function () {
+                    addBatchImages(endIndex);
+                }, 400);
+            }
+        }
+
+        // 调用函数开始添加图片
+        addBatchImages(0);
+        window.addEventListener('error', event => {
+  // 过滤js error
+  let target = event.target || event.srcElement;
+  if(target instanceof HTMLImageElement) {
+    console.log("图片加载异常", target);
+    target.src = 'https://img.qlvv.cn/file/ad3880f3b47a0c6d4d862.png';
+  };
+}, true);
   </script>
 
 </body>
