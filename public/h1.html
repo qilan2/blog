@@ -2,136 +2,115 @@
 <html lang="en">
 
 <head>
-  <title>柒蓝 - Picture display</title>
-  <script src="./js/jquery.min.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>柒蓝 - Picture display</title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/viewer.min.js"></script>
+    <link rel="stylesheet" href="css/viewer.min.css">
+    <style>
+        * {
+            /*margin: 0;*/
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <style>
-    * {
-      /*margin: 0;*/
-      padding: 0;
-      box-sizing: border-box;
-    }
+        h2,
+        h4 {
+            text-align: center;
+            color: #7EA1C4;
+        }
 
-    h1, h4 {
-      text-align: center;
-      color: #7EA1C4;
-    }
+        body {
+            text-align: center;
+            /* 将容器内部元素居中对齐 */
+        }
 
-body {
-  text-align: center; /* 将容器内部元素居中对齐 */
-}
+        .img-container {
+            width: 300px;
+            /* 设置图片容器的宽度 */
+            margin-top: 15px;
+            /* 设置顶部间距 */
+            border-radius: 8px;
+            text-align: center;
+            /* 文字居中 */
+            box-sizing: border-box;
+            /* 盒模型设置为border-box */
+            border: 2px solid #dc61cb;
+            /* 添加绿色边框 */
+            padding: 0px;
+            /* 添加内边距 */
+            position: relative;
+            /* 设置相对定位 */
+        }
 
-.img-container {
-  width: 300px; /* 设置图片容器的宽度 */
-  margin-top: 15px; /* 设置顶部间距 */
-  border-radius: 8px;
-  text-align: center; /* 文字居中 */
-  box-sizing: border-box; /* 盒模型设置为border-box */
-  border: 2px solid #dc61cb; /* 添加绿色边框 */
-  padding: 0px; /* 添加内边距 */
-  position: relative; /* 设置相对定位 */
-}
-#imagesContainer {
-  display: flex;
-  flex-wrap: wrap; /* 允许换行 */
-  justify-content: center; /* 图片左右分布 */
-  align-items: center; /* 水平垂直居中对齐 */
-}
-.image-row {
-  display: flex; /* 使用flex布局 */
-  flex-wrap: wrap; /* 允许换行 */
-  justify-content: flex-start; /* 图片左对齐 */
-  align-items: center; /* 水平居中对齐 */
-}
+        #imagesContainer {
+            display: flex;
+            flex-wrap: wrap;
+            /* 允许换行 */
+            justify-content: center;
+            /* 图片左右分布 */
+            align-items: center;
+            /* 水平垂直居中对齐 */
+        }
 
-    .loading-image {
-      width: 100%;
-      height: 100%;
-      background-color: #ccc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+        .image-row {
+            display: flex;
+            /* 使用flex布局 */
+            flex-wrap: wrap;
+            /* 允许换行 */
+            justify-content: flex-start;
+            /* 图片左对齐 */
+            align-items: center;
+            /* 水平居中对齐 */
+        }
 
-    .loaded-image {
-      display: none;
-    }
+        .loading-image {
+            width: 100%;
+            height: 100%;
+            background-color: #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .pic {
-      width: 100%;
-      height: 370px;
-      cursor: pointer; /* 添加鼠标指针样式，表示可以点击 */
-      /*background-color: 2px solid #dc61cb;*/
-       /*background-image: url('https://img.qlvv.cn/file/64213b65d55eb297b40d0.gif'); /* 设置图片背景 https://img.qlvv.cn/file/985e5f0315da615dac539.gif 
-         background-size: cover; /* 图片将被缩放以完全覆盖整个容器 */
-  background-position: center; /* 图片在容器中居中显示 */
-    max-width: 100%;
-  /*height: auto !important;*/
-  border: 1px solid #dee2e6;
-  /*margin-bottom: 0.75rem;*/
-  margin-right: 0.5em;
-  border-radius:6px;
-  box-shadow: 6px 6px 12px 0px rgba(0,0,0,0.2),0px 0px 8px 0px rgba(0,0,0,0.19);
-    
-    }
-    
-    
-    /* 添加一个用于放大图片的模态框样式 */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  left: 50%; /* 将模态框的左边位置设置为页面宽度的一半 */
-  top: 50%; /* 将模态框的上边位置设置为页面高度的一半 */
-  /*padding-left: 10%;*/
-  transform: translate(-50%, -50%); /* 使用transform属性将模态框向左和向上移动50%，使其居中 */
-  max-width: 100%;
-  max-height: 100%;
-  /*overflow: auto;*/
-  /*background-color: rgb(107 192 254 / 37%);*/
-  padding: 50px 0; /* 添加垂直内边距以使内容垂直居中 */
-}
+        .loaded-image {
+            display: none;
+        }
 
-.modal-content {
-  margin: auto;
-  display: block;
-  max-width: 855px;
-  max-height: 60%;
-  margin-bottom: 1%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-    /* 关闭按钮样式 */
-.close {
-  position: absolute;
-  bottom: -100px; /* 将关闭按钮设置到底部，可以根据需要调整位置 */
-  left: 50%; /* 将关闭按钮水平居中 */
-  transform: translateX(-50%); /* 使用transform属性将关闭按钮向左移动50%，使其水平居中 */
-  color: red;
-  font-size: 155px; /* 根据需要调整字体大小 */
-  cursor: pointer;
-  }
-  
-  
-  
-  </style>
+        .pic {
+            width: 100%;
+            height: 370px;
+            cursor: pointer;
+            /* 添加鼠标指针样式，表示可以点击 */
+            /*background-color: 2px solid #dc61cb;*/
+            /*background-image: url('https://img.qlvv.cn/file/64213b65d55eb297b40d0.gif'); /* 设置图片背景 https://img.qlvv.cn/file/985e5f0315da615dac539.gif 
+             background-size: cover; /* 图片将被缩放以完全覆盖整个容器 */
+            background-position: center;
+            /* 图片在容器中居中显示 */
+            max-width: 100%;
+            /*height: auto !important;*/
+            border: 1px solid #dee2e6;
+            /*margin-bottom: 0.75rem;*/
+            margin-right: 0.5em;
+            border-radius: 6px;
+            box-shadow: 6px 6px 12px 0px rgba(0, 0, 0, 0.2), 0px 0px 8px 0px rgba(0, 0, 0, 0.19);
+        }
+    </style>
 </head>
 
 <body>
-  <!-- <hr color:"#de1c31"> -->
-  <h1>点击图片查看或长摁保存，不显示就是资源已被删除</h1>
-  <div id="imagesContainer"></div>
+    <div style="text-align: center;">
+        <img style="font-weight: 200; font-size: 200%;" src="https://counter.honk.li/cmoe?name=qilan&theme=mb" alt="统计嗝屁了" />
+    </div>
 
-  <!-- 添加一个模态框用于放大图片 -->
-  <div id="myModal" class="modal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="img01">
-  </div>
+    <!-- <hr color:"#de1c31"> -->
+    <h2>点击查看,不显示就是资源已被删除</h2>
+    <div id="imagesContainer"></div>
 
-  <script>
- // 获取url中的参数值
+    <script>
+        // 获取url中的参数值
         function getParameterByName(name, url) {
             if (!url) {
                 url = window.location.href;
@@ -235,7 +214,7 @@ if (currentTime - timestamp > 300000) {
     target.src = 'https://img.qlvv.cn/file/ad3880f3b47a0c6d4d862.png';
   };
 }, true);
-  </script>
+    </script>
 
 </body>
 
